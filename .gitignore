@@ -1,0 +1,5 @@
+# Contraseñas: "Theo270224"
+.streamlit/secrets.toml
+
+# Archivos temporales de Python
+__pycache__/
