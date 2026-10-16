@@ -4,6 +4,8 @@ Base de datos en **PostgreSQL** que carga el Registro de Compras y Ventas (RCV) 
 
 Pensado para pymes chilenas que revisan sus impuestos sin contador.
 
+![Dashboard](docs/dashboard.png)
+
 ## El problema
 
 Cada mes el SII entrega un CSV de compras y otro de ventas. Revisarlos a mano en Excel es lento y los errores pasan de largo:
@@ -22,6 +24,7 @@ Cada mes el SII entrega un CSV de compras y otro de ventas. Revisarlos a mano en
 | **IVA mensual** | Débito y crédito fiscal por período; las notas de crédito restan. |
 | **Remanente** | Arrastra el crédito fiscal a favor al mes siguiente con un CTE recursivo. |
 | **Alertas** | 5 reglas: posible duplicado, IVA inconsistente, monto atípico, proveedor nuevo con monto alto y nota de crédito sin factura. |
+| **Dashboard** | Página web en Streamlit que consulta las vistas en vivo. |
 
 ## Resultados con los datos de ejemplo
 
@@ -49,22 +52,43 @@ El remanente evita pagar de más: en marzo de 2025 la compra de una hidrolavador
 
 ## Cómo ejecutarlo
 
-Requisitos: PostgreSQL 16.
+Requisitos: PostgreSQL 16 y Python 3.12.
 
-1. Clona el repositorio en `C:\proyectos\analizador-rcv-sii`.
-2. En psql, crea una base vacía y ejecuta el script principal:
+### 1. Base de datos
+
+En psql, crea una base vacía y ejecuta el script principal:
 
 ```sql
-CREATE DATABASE rcv;
-\c rcv
+CREATE DATABASE rcv_prueba;
+\c rcv_prueba
 \i C:/proyectos/analizador-rcv-sii/crear_todo.sql
 ```
 
-3. Consulta los resultados:
+Consultas de ejemplo:
 
 ```sql
 SELECT * FROM posicion_iva ORDER BY periodo;
 SELECT * FROM alertas ORDER BY severidad, periodo;
+```
+
+### 2. Dashboard
+
+Crea el archivo `.streamlit/secrets.toml` con tus datos de conexión (está en `.gitignore`, no se sube a GitHub):
+
+```toml
+[postgres]
+host = "localhost"
+port = 5432
+dbname = "rcv_prueba"
+user = "postgres"
+password = "tu_contraseña"
+```
+
+Instala las librerías y abre el dashboard:
+
+```
+pip install -r requirements.txt
+python -m streamlit run app/dashboard.py
 ```
 
 ## Estructura
@@ -77,18 +101,20 @@ scripts/cargar_staging.sql  carga de los 42 CSV
 sql/03_transformar.sql      staging -> tablas limpias
 sql/04_iva.sql              IVA mensual y remanente
 sql/05_alertas.sql          motor de alertas
+app/dashboard.py            dashboard en Streamlit
 data/                       CSV de ejemplo (ficticios)
+docs/                       capturas
 ```
 
 ## Alcance
 
-- Herramienta de análisis y control; **no reemplaza la declaración del F29**. El remanente no se reajusta por UTM (mejora pendiente).
+- Herramienta de análisis y control; **no reemplaza la declaración del F29**.
 - **Los datos son 100 % ficticios.** Nombres y RUT inventados, con dígito verificador válido.
 
 ## Próximos pasos
 
-- Dashboard con gráficos en Python
 - Reajuste del remanente por UTM
+- Incluir compras exentas en el gráfico de proveedores
 
 ## Autor
 
